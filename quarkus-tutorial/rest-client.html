@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>REST Client :: Quarkus Tutorial</title>
     <link rel="canonical" href="https://redhat-developer-demos.github.io/quarkus-tutorial/quarkus-tutorial/rest-client.html">
+    <link rel="prev" href="kubernetes.html">
+    <link rel="next" href="fault-tolerance.html">
     <meta name="generator" content="Antora 2.3.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -83,12 +85,6 @@
     <button class="nav-item-toggle"></button>
     <span class="nav-text">Cloud Native</span>
 <ul class="nav-list">
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
-  </li>
   <li class="nav-item is-current-page" data-depth="2">
     <a class="nav-link" href="rest-client.html">REST Client</a>
   </li>
@@ -101,12 +97,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="metrics.html">Metrics</a>
   </li>
-</ul>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <span class="nav-text">Advanced</span>
-<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
+  </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="security.html">Security with JWT RBAC</a>
   </li>
@@ -131,7 +127,7 @@
     <li><a href="rest-client.html">REST Client</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/redhat-developer-demos/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/rest-client.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/dextro67/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/rest-client.adoc">Edit this Page</a></div>
   </div>
   <div class="content">
 <article class="doc">
@@ -139,70 +135,352 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Unresolved include directive in modules/ROOT/pages/rest-client.adoc - include::_attributes.adoc[]
-:quarkus-project-name: fruits-app
-:svc-path: fruit
-:experimental:</p>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-create-fruity-vice-service-resclient"><a class="anchor" href="#qext-create-fruity-vice-service-resclient"></a>Using the RestClient</h3>
-<div class="paragraph">
-<p>Open the following Java class <code>$PROJECT_HOME/src/main/java/com/example/FruitResource.java</code> and copy the next content in its body:</p>
-</div>
-<div id="quarkusrc-fruity-vice-service-inject" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">@RestClient
-FruityViceService fruityViceService;
-
-@GET
-@Path("{name}")
-@Produces(MediaType.APPLICATION_JSON)
-public FruityVice getFruitInfoByName(@PathParam("name") String name) {
-    return fruityViceService.getFruitByName(name);
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="qext-rest-client-run-quarkus-app-dev-mode"><a class="anchor" href="#qext-rest-client-run-quarkus-app-dev-mode"></a>Run Quarkus Application in Development mode</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>If you are not in dev mode, run the following command to start Quarkus application in development mode:</p>
-</div>
-<div id="rest-client-build-run-dev" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw compile quarkus:dev</code></pre>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-call-fruity-rest-client"><a class="anchor" href="#qext-call-fruity-rest-client"></a>Invoke Service</h3>
-<div class="paragraph">
-<p>The simple <code>fruit/banana</code> REST URI can be called via browser using <a href="http://localhost:8080/fruit/banana" class="bare">http://localhost:8080/fruit/banana</a> or using CLI like:</p>
-</div>
-<div id="rest-client-k8s-svc-call" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/fruit/banana</code></pre>
-</div>
+<p>A not usual scenario in a Microservices architecture is the remote invocation of remote REST HTTP endpoints. Quarkus provides a typed REST client that follows the  <a href="https://github.com/eclipse/microprofile-rest-client" target="_blank" rel="noopener">MicroProfile REST Client</a> specification.</p>
 </div>
 <div class="paragraph">
-<p>The REST call should return an response like:</p>
+<p>Let&#8217;s create a REST client that access <a href="https://www.fruityvice.com" class="bare" target="_blank" rel="noopener">https://www.fruityvice.com</a> to get nutrition information about our fruits. The endpoint we&#8217;re interested into is this one:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>api/fruit/{name}</code>, which returns specific info about the given fruit name.</p>
+</li>
+</ul>
 </div>
 <div class="listingblock console-output">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-    "name":"Banana",
-    "nutritions":{
-        "calories":96,
-        "fat":0.2
+    "genus": "Musa",
+    "name": "Banana",
+    "id": 1,
+    "family": "Musaceae",
+    "order": "Zingiberales",
+    "nutritions": {
+        "carbohydrates": 22,
+        "protein": 1,
+        "fat": 0.2,
+        "calories": 96,
+        "sugar": 17.2
     }
 }</code></pre>
 </div>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_add_the_rest_client_extension"><a class="anchor" href="#_add_the_rest_client_extension"></a>Add the REST Client extension</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Just open a new terminal window, and make sure you’re at the root of your <code>tutorial-app</code> project, then run:</p>
 </div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextensions="io.quarkus:quarkus-rest-client"</code></pre>
+</div>
+</div>
+<div class="listingblock console-output">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">[INFO] Scanning for projects...
+[INFO]
+[INFO] -----------------&lt; com.redhat.developers:tutorial-app &gt;-----------------
+[INFO] Building tutorial-app 1.0-SNAPSHOT
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+[INFO] --- quarkus-maven-plugin:1.4.2.Final:add-extension (default-cli) @ tutorial-app ---
+✅ Adding extension io.quarkus:quarkus-rest-client
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.773 s
+[INFO] Finished at: 2020-05-11T21:43:38-04:00
+[INFO] ------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_fruityvice_pojo"><a class="anchor" href="#_create_fruityvice_pojo"></a>Create FruityVice POJO</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We need to create a POJO object that is used to unmarshal JSON message from <a href="http://www.fruityvice.com" class="bare" target="_blank" rel="noopener">http://www.fruityvice.com</a>.</p>
+</div>
+<div class="paragraph">
+<p>Create a new <code>FruityVice</code> Java class in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import javax.json.bind.annotation.JsonbCreator;
+
+public class FruityVice {
+
+    private String name;
+
+    private Nutritions nutritions;
+
+    FruityVice(String name, Nutritions nutritions) {
+        this.name = name;
+        this.nutritions = nutritions;
+    }
+
+    @JsonbCreator
+    public static FruityVice of(String name, Nutritions nutritions) {
+        return new FruityVice(name, nutritions);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Nutritions getNutritions() {
+        return nutritions;
+    }
+
+    public static class Nutritions {
+
+        private double carbohydrates;
+
+        private double calories;
+
+        Nutritions(double carbohydrates, double calories) {
+            this.carbohydrates = carbohydrates;
+            this.calories = calories;
+        }
+
+        @JsonbCreator
+        public static Nutritions of(double carbohydrates, double calories) {
+                return new Nutritions(carbohydrates, calories);
+        }
+
+        public double getCarbohydrates() {
+            return carbohydrates;
+        }
+
+        public double getCalories() {
+            return calories;
+        }
+
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_create_fruityviceservice"><a class="anchor" href="#_create_fruityviceservice"></a>Create FruityViceService</h3>
+<div class="paragraph">
+<p>Now we&#8217;re going to implement a Java interface that mimics the remote REST endpoint.</p>
+</div>
+<div class="paragraph">
+<p>Create a new <code>FruityViceService</code> Java interface in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+@Path("/api/fruit")
+@RegisterRestClient
+public interface FruityViceService {
+
+    @GET
+    @Path("/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public FruityVice getFruitByName(@PathParam("name") String name);
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configure_rest_client_properties"><a class="anchor" href="#_configure_rest_client_properties"></a>Configure REST Client properties</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Add the following properties to your <code>application.properties</code> in <code>src/main/resources</code>:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-properties hljs" data-lang="properties">com.redhat.developers.FruityViceService/mp-rest/url=https://www.fruityvice.com</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_fruitdto"><a class="anchor" href="#_create_fruitdto"></a>Create FruitDTO</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We&#8217;re going to enhance our <code>FruitResource</code> endpoint by creating a new <code>FruitDTO</code> POJO and add the additional information provided by the <code>FruitViceService</code>.</p>
+</div>
+<div class="paragraph">
+<p>Create a new <code>FruitDTO</code> Java class in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+public class FruitDTO {
+
+    private String name;
+
+    private String season;
+
+    private double carbohydrates;
+
+    private double calories;
+
+    private FruitDTO(String name, String season, double carbohydrates, double calories) {
+        this.name = name;
+        this.season = season;
+        this.carbohydrates = carbohydrates;
+        this.calories = calories;
+    }
+
+    public static FruitDTO of(Fruit fruit, FruityVice fruityVice) {
+        return new FruitDTO(
+            fruit.name,
+            fruit.season,
+            fruityVice.getNutritions().getCarbohydrates(),
+            fruityVice.getNutritions().getCalories());
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSeason() {
+        return season;
+    }
+
+    public double getCarbohydrates() {
+        return carbohydrates;
+    }
+
+    public double getCalories() {
+        return calories;
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_change_fruitresource_to_use_fruityviceservice"><a class="anchor" href="#_change_fruitresource_to_use_fruityviceservice"></a>Change FruitResource to use FruityViceService</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that we have all of the required classes, we can change <code>FruitResource</code> to use our <code>FruityViceService</code> REST client.</p>
+</div>
+<div class="paragraph">
+<p>Change the <code>FruitResource</code> Java class in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+
+@Path("/fruit")
+public class FruitResource {
+
+    @RestClient
+    FruityViceService fruityViceService;
+
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public List&lt;FruitDTO&gt; fruits(@QueryParam("season") String season) {
+        if (season != null) {
+            return Fruit.findBySeason(season).stream()
+                .map(fruit -&gt; FruitDTO.of(fruit, fruityViceService.getFruitByName(fruit.name)))
+                .collect(Collectors.toList());
+        }
+        return Fruit.&lt;Fruit&gt;listAll().stream()
+                .map(fruit -&gt; FruitDTO.of(fruit, fruityViceService.getFruitByName(fruit.name)))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response newFruit(Fruit fruit) {
+        fruit.id = null;
+        fruit.persist();
+        return Response.status(Status.CREATED).entity(fruit).build();
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_invoke_the_endpoint"><a class="anchor" href="#_invoke_the_endpoint"></a>Invoke the endpoint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can check the your new implementation using a REST client by pointing your browser to <a href="http://localhost:8080/fruit?season=Summer" class="bare" target="_blank" rel="noopener">http://localhost:8080/fruit?season=Summer</a></p>
+</div>
+<div class="paragraph">
+<p>You can also run the following command:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/fruit?season=Summer</code></pre>
+</div>
+</div>
+<div class="listingblock console-output">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">[
+  {
+    "calories": 0,
+    "carbohydrates": 29,
+    "name": "Blueberry",
+    "season": "Summer"
+  },
+  {
+    "calories": 0,
+    "carbohydrates": 96,
+    "name": "Banana",
+    "season": "Summer"
+  },
+  {
+    "calories": 0,
+    "carbohydrates": 30,
+    "name": "Watermelon",
+    "season": "Summer"
+  }
+]</code></pre>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="kubernetes.html">Deploy to Kubernetes</a></span>
+  <span class="next"><a href="fault-tolerance.html">Fault Tolerance</a></span>
+</nav>
 </article>
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>

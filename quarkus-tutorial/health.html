@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Health Check :: Quarkus Tutorial</title>
     <link rel="canonical" href="https://redhat-developer-demos.github.io/quarkus-tutorial/quarkus-tutorial/health.html">
+    <link rel="prev" href="fault-tolerance.html">
+    <link rel="next" href="metrics.html">
     <meta name="generator" content="Antora 2.3.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -84,12 +86,6 @@
     <span class="nav-text">Cloud Native</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
-  </li>
-  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="rest-client.html">REST Client</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -101,12 +97,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="metrics.html">Metrics</a>
   </li>
-</ul>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <span class="nav-text">Advanced</span>
-<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
+  </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="security.html">Security with JWT RBAC</a>
   </li>
@@ -131,7 +127,7 @@
     <li><a href="health.html">Health Check</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/redhat-developer-demos/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/health.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/dextro67/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/health.adoc">Edit this Page</a></div>
   </div>
   <div class="content">
 <article class="doc">
@@ -139,148 +135,49 @@
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>We can add <code>{quarkus-health-ext-name}</code> extension to allow Quarkus application to be probed on the REST endpoint called <code>health</code> to know about its current health.</p>
+<p>Health Checks are important in platforms like Kubernetes because it allows the infrastructure to be aware of the state of the application.</p>
 </div>
 <div class="paragraph">
-<p>To add <code>{quarkus-health-ext-name}</code> to the Quarkus application, run the following command from <code>{quarkus-project-name}</code> project directory:</p>
+<p>There are two different types of health checks:</p>
 </div>
-<div id="qext-mvn-add-extension" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextension="{quarkus-health-ext-name}"</code></pre>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Liveness probes</strong> tells your platform if your application is running ok or not. When your liveness probe is down, your platform might restart your instance to guarantee that you have the minimum required amount of running instances in production.</p>
+</li>
+<li>
+<p><strong>Readiness probes</strong> tells your platform if your application is <em>warm</em> enough to reply to requests in a reasonable amount of time. Java applications, for example, might need some time to warm up, so the readiness probe should be up only when it&#8217;s ready to reply to request in a timely manner. Checks that depends on other services should be implemented as readiness probes: if a remote service is down, restarting your application won&#8217;t fix the issue.</p>
+</li>
+</ul>
 </div>
 </div>
+</div>
+<div class="sect1">
+<h2 id="_add_the_health_extension"><a class="anchor" href="#_add_the_health_extension"></a>Add the Health extension</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>After successful execution of the above command, you will have the following dependency added to the <code>{quarkus-project-name}</code> project&#8217;s pom.xml:</p>
+<p>Just open a new terminal window, and make sure you’re at the root of your <code>tutorial-app</code> project, then run:</p>
 </div>
 <div class="listingblock console-input">
-<div class="title">pom.xml</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">    &lt;dependency&gt;
-      &lt;groupId&gt;io.quarkus&lt;/groupId&gt;
-      &lt;artifactId&gt;quarkus-smallrye-health&lt;/artifactId&gt;
-    &lt;/dependency&gt;</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextension=quarkus-smallrye-health</code></pre>
 </div>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="qext-health-check-default-run-quarkus-app-dev-mode"><a class="anchor" href="#qext-health-check-default-run-quarkus-app-dev-mode"></a>Run Quarkus Application in Development mode</h3>
+<div class="sect1">
+<h2 id="_invoke_the_health_endpoint"><a class="anchor" href="#_invoke_the_health_endpoint"></a>Invoke the /health endpoint</h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>If you are not in dev mode, run the following command to start Quarkus application in development mode:</p>
+<p>Just by adding the Health extension you&#8217;ll have a <code>/health</code> endpoint providing a very trivial health check.</p>
 </div>
-<div id="health-check-default-build-run-dev" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw compile quarkus:dev</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-call-health-ep"><a class="anchor" href="#qext-call-health-ep"></a>Invoke Service</h3>
 <div class="paragraph">
-<p>The simple <code>health</code> REST URI can be called via browser using <code><a href="http://localhost:8080/health" class="bare">http://localhost:8080/health</a></code> or using CLI like:</p>
+<p>Run the following command:</p>
 </div>
-<div id="basics-health-check-k8s-svc-call" class="listingblock console-input">
+<div class="listingblock console-input">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/health</code></pre>
 </div>
-</div>
-<div class="paragraph">
-<p>The REST call about should return an response like:</p>
-</div>
-<div class="listingblock console-output">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
-    "checks": [],
-    "outcome": "UP"
-}</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Then you can stop the App by typing <span class="keyseq"><kbd>Ctrl</kbd>+<kbd>C</kbd></span>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-custom-health-check"><a class="anchor" href="#qext-custom-health-check"></a>Customizing Health Checks</h3>
-<div class="paragraph">
-<p>So far, you&#8217;ve seen that some a default health check is provided but in most cases, you&#8217;d like to customize this logic providing custom logic.
-Moreover, Kubernetes provides the concept of liveness and readiness probe to regularly check the health of the application.</p>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">liveness</dt>
-<dd>
-<p>Checks if the application is up and running.</p>
-</dd>
-<dt class="hdlist1">readiness</dt>
-<dd>
-<p>Checks if the application can receive public requests.</p>
-</dd>
-</dl>
-</div>
-<div class="paragraph">
-<p>Let&#8217;s create a custom check for both liveness and readiness checks.
-Add new Java file in <code>$PROJECT_HOME/src/main/java/com/example</code> called <code>FruitHealthCheck</code> with the following contents:</p>
-</div>
-<div id="quarkusp-fruit-checks" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.example;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
-
-import org.eclipse.microprofile.health.HealthCheck;
-import org.eclipse.microprofile.health.Liveness;
-import org.eclipse.microprofile.health.Readiness;
-
-import io.smallrye.health.HealthStatus;
-
-@ApplicationScoped
-public class FruitHealthCheck {
-
-    @Produces
-    @ApplicationScoped
-    @Liveness
-    HealthCheck liveCheck() {
-      return HealthStatus.up("successful-live");
-    }
-
-    @Produces
-    @ApplicationScoped
-    @Readiness
-    HealthCheck readyCheck() {
-      return HealthStatus.state("successful-read", this::isReady);
-    }
-
-    private boolean isReady() {
-        return true;
-    }
-}</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-health-check-custom-run-quarkus-app-dev-mode"><a class="anchor" href="#qext-health-check-custom-run-quarkus-app-dev-mode"></a>Run Quarkus Application in Development mode</h3>
-<div class="paragraph">
-<p>If you are not in dev mode, run the following command to start Quarkus application in development mode:</p>
-</div>
-<div id="health-check-custom-build-run-dev" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw compile quarkus:dev</code></pre>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="qext-call-health-custom"><a class="anchor" href="#qext-call-health-custom"></a>Invoke Service</h3>
-<div class="paragraph">
-<p>The simple <code>health</code> REST URI can be called via browser using <code><a href="http://localhost:8080/health" class="bare">http://localhost:8080/health</a></code> or using CLI like:</p>
-</div>
-<div id="custom-health-k8s-svc-call" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/health</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The REST call about should return an response like:</p>
 </div>
 <div class="listingblock console-output">
 <div class="content">
@@ -288,11 +185,7 @@ public class FruitHealthCheck {
     "status": "UP",
     "checks": [
         {
-            "name": "successful-live",
-            "status": "UP"
-        },
-        {
-            "name": "successful-read",
+            "name": "Database connections health check",
             "status": "UP"
         }
     ]
@@ -300,44 +193,169 @@ public class FruitHealthCheck {
 </div>
 </div>
 <div class="paragraph">
-<p>But also you can invoke them individually by calling <code>/health/live</code> and <code>/health/ready</code>.</p>
+<p>Notice that since we&#8217;re using the Hibernate and database extensions, Quarkus automatically added a readiness probe checking the status of our database connections.</p>
 </div>
-<div id="custom-health-live-k8s-svc-call" class="listingblock console-input">
+</div>
+</div>
+<div class="sect1">
+<h2 id="_add_a_custom_liveness_probe"><a class="anchor" href="#_add_a_custom_liveness_probe"></a>Add a custom liveness probe</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a new <code>LivenessProbe</code> Java class in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.Liveness;
+
+@Liveness
+public class LivenessProbe implements HealthCheck {
+    @Override
+    public HealthCheckResponse call() {
+        return HealthCheckResponse.up("I'm alive");
+    }
+
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_add_a_custom_readiness_probe"><a class="anchor" href="#_add_a_custom_readiness_probe"></a>Add a custom readiness probe</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Create a new <code>ReadinessProbe</code> Java class in <code>src/main/java</code> in the <code>com.redhat.developers</code> package with the following contents:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import org.eclipse.microprofile.health.HealthCheck;
+import org.eclipse.microprofile.health.HealthCheckResponse;
+import org.eclipse.microprofile.health.Readiness;
+
+@Readiness
+public class ReadinessProbe implements HealthCheck{
+
+    @Override
+    public HealthCheckResponse call() {
+        return HealthCheckResponse.builder()
+            .name("database")
+            .withData("connections", "10") <i class="conum" data-value="1"></i><b>(1)</b>
+            .up()
+            .build();
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>You can use a <code>HealthCheckResponse</code> builder to add custom information to your health checks.</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_invoke_the_health_endpoint_with_custom_probes"><a class="anchor" href="#_invoke_the_health_endpoint_with_custom_probes"></a>Invoke the /health endpoint with custom probes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run the following command:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/health</code></pre>
+</div>
+</div>
+<div class="listingblock console-output">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+    "status": "UP",
+    "checks": [
+        {
+            "name": "I'm alive",
+            "status": "UP"
+        },
+        {
+            "name": "database",
+            "status": "UP",
+            "data": {
+                "connections": "10"
+            }
+        },
+        {
+            "name": "Database connections health check",
+            "status": "UP"
+        }
+    ]
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can see that the <code>/health</code> endpoint consolidates information from both the liveness and readiness probes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_invoke_the_liveness_endpoint"><a class="anchor" href="#_invoke_the_liveness_endpoint"></a>Invoke the liveness endpoint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run the following command:</p>
+</div>
+<div class="listingblock console-input">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/health/live</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>The REST call about should return an response like:</p>
-</div>
 <div class="listingblock console-output">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
     "status": "UP",
     "checks": [
         {
-            "name": "successful-live",
+            "name": "I'm alive",
             "status": "UP"
         }
     ]
 }</code></pre>
 </div>
 </div>
-<div id="custom-health-ready-k8s-svc-call" class="listingblock console-input">
+<div class="paragraph">
+<p>You can see that the liveness endpoints only returns information about the liveness probes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_invoke_the_readiness_endpoint"><a class="anchor" href="#_invoke_the_readiness_endpoint"></a>Invoke the readiness endpoint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Run the following command:</p>
+</div>
+<div class="listingblock console-input">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">curl localhost:8080/health/ready</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>The REST call about should return an response like:</p>
-</div>
 <div class="listingblock console-output">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
     "status": "UP",
     "checks": [
         {
-            "name": "successful-read",
+            "name": "database",
+            "status": "UP",
+            "data": {
+                "connections": "10"
+            }
+        },
+        {
+            "name": "Database connections health check",
             "status": "UP"
         }
     ]
@@ -345,90 +363,31 @@ public class FruitHealthCheck {
 </div>
 </div>
 <div class="paragraph">
-<p>Then you can stop the container by typing <span class="keyseq"><kbd>Ctrl</kbd>+<kbd>C</kbd></span>.</p>
+<p>You can see that the readiness endpoints only returns information about the readiness probes.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="qext-health-checks-kubernetes"><a class="anchor" href="#qext-health-checks-kubernetes"></a>Kubernetes Extension and Health Checks</h3>
-<div class="paragraph">
-<p>Kubernetes extension detects that Health Check extension is registered and registers them in generated Kubernetes resource.</p>
 </div>
-<div class="admonitionblock important">
+<div class="sect1">
+<h2 id="_the_health_extension_and_kubernetes"><a class="anchor" href="#_the_health_extension_and_kubernetes"></a>The Health extension and Kubernetes</h2>
+<div class="sectionbody">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph">
-<p>If you have not deployed the application previously, you need to add Quarkus Kubernetes extension. This extension uses <a href="https://github.com/dekorateio/dekorate">Dekorate</a> to generate a default Kubernetes resource template.</p>
-</div>
-<div id="qext-mvn-add-kubernetes-extension" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:add-extension -Dextensions="quarkus-kubernetes"</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>You need to configure group and name of the Docker container used to deploy into Kubernetes.</p>
-</div>
-<div class="paragraph">
-<p>Add the following properties (if you haven&#8217;t already done it before) to $PROJECT_HOME/src/main/resources/application.properties:</p>
-</div>
-<div id="quarkusk8s-update-props" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-config hljs" data-lang="config">kubernetes.group=example
-quarkus.application.name={quarkus-project-name}</code></pre>
-</div>
-</div>
+If you&#8217;re using the Quarkus Kubernetes extension, the liveness and readiness probes are automatically configured in your <code>Deployment</code> when you generate the Kubernetes yaml files.
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>Now you need to run Maven goal to generate Kubernetes resource.</p>
-</div>
-<div id="quarkusk8s-generate-kubernetes" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw package -DskipTests</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>You can inspect the generated file by accessing next file:</p>
-</div>
-<div id="quakrusk8s-generated-kubernetes-resource" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat target/kubernetes/kubernetes.yml</code></pre>
-</div>
-</div>
-<div class="tabset is-loading">
-<div class="ulist tabs">
-<ul>
-<li>
-<p><a id="tabset1_kubectl"></a>kubectl</p>
-</li>
-<li>
-<p><a id="tabset1_oc"></a>oc</p>
-</li>
-</ul>
-</div>
-<div class="content">
-<div class="tab-pane" aria-labelledby="tabset1_kubectl">
-<div id="health-checkk8s-delete-k8s-app" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">kubectl delete all --all</code></pre>
-</div>
-</div>
-</div>
-<div class="tab-pane" aria-labelledby="tabset1_oc">
-<div id="health-checkk8s-delete-oc-app" class="listingblock console-input">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc delete all --all</code></pre>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
+<nav class="pagination">
+  <span class="prev"><a href="fault-tolerance.html">Fault Tolerance</a></span>
+  <span class="next"><a href="metrics.html">Metrics</a></span>
+</nav>
 </article>
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>

@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Configuration :: Quarkus Tutorial</title>
     <link rel="canonical" href="https://redhat-developer-demos.github.io/quarkus-tutorial/quarkus-tutorial/configuration.html">
+    <link rel="prev" href="basics.html">
+    <link rel="next" href="panache.html">
     <meta name="generator" content="Antora 2.3.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -84,12 +86,6 @@
     <span class="nav-text">Cloud Native</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
-  </li>
-  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="rest-client.html">REST Client</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -101,12 +97,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="metrics.html">Metrics</a>
   </li>
-</ul>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <span class="nav-text">Advanced</span>
-<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
+  </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="security.html">Security with JWT RBAC</a>
   </li>
@@ -131,7 +127,7 @@
     <li><a href="configuration.html">Configuration</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/redhat-developer-demos/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/configuration.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/dextro67/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/configuration.adoc">Edit this Page</a></div>
   </div>
   <div class="content">
 <article class="doc">
@@ -235,6 +231,84 @@ greeting=Hello y'all!</code></pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_update_your_integration_test"><a class="anchor" href="#_update_your_integration_test"></a>Update your integration test</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Since we changed the output of our <code>/hello</code> endpoint, our integration test doesn&#8217;t pass anymore.</p>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s update <code>FruitResourceTest</code> to reflect our recent changes:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">package com.redhat.developers;
+
+import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.Test;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.CoreMatchers.is;
+
+@QuarkusTest
+public class HelloResourceTest {
+
+    @Test
+    public void testHelloEndpoint() {
+        given()
+          .when().get("/hello")
+          .then()
+             .statusCode(200)
+             .body(is("Hello y'all!"));
+    }
+
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Stop your current Live Coding session of Quarkus in the terminal by sending a <code>CTRL+C</code>:</p>
+</div>
+<div class="listingblock console-output">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">^C2020-05-11 08:33:41,865 INFO  [io.quarkus] (Quarkus Main Thread) tutorial-app stopped in 0.007s</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now run your tests to check if everything is ok:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw clean test</code></pre>
+</div>
+</div>
+<div class="listingblock console-output">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-text hljs" data-lang="text">[INFO] Results:
+[INFO]
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  12.851 s
+[INFO] Finished at: 2020-05-11T21:31:31-04:00
+[INFO] ------------------------------------------------------------------------</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>BUILD SUCCESS</code>! You can now go back to the amazing <em>Live Coding</em> mode of Quarkus:</p>
+</div>
+<div class="listingblock console-input">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw quarkus:dev</code></pre>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="basics.html">Basics and Fundamentals</a></span>
+  <span class="next"><a href="panache.html">Hibernate with Panache</a></span>
+</nav>
 </article>
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>

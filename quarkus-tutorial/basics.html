@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Basics and Fundamentals :: Quarkus Tutorial</title>
     <link rel="canonical" href="https://redhat-developer-demos.github.io/quarkus-tutorial/quarkus-tutorial/basics.html">
+    <link rel="prev" href="setup.html">
+    <link rel="next" href="configuration.html">
     <meta name="generator" content="Antora 2.3.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
@@ -84,12 +86,6 @@
     <span class="nav-text">Cloud Native</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
-  </li>
-  <li class="nav-item" data-depth="2">
-    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
-  </li>
-  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="rest-client.html">REST Client</a>
   </li>
   <li class="nav-item" data-depth="2">
@@ -101,12 +97,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="metrics.html">Metrics</a>
   </li>
-</ul>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="reactive.html">Reactive with Mutiny</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <span class="nav-text">Advanced</span>
-<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="kafka-and-streams.html">Apache Kafka with Reactive Streams</a>
+  </li>
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="security.html">Security with JWT RBAC</a>
   </li>
@@ -131,7 +127,7 @@
     <li><a href="basics.html">Basics and Fundamentals</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="https://github.com/redhat-developer-demos/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/basics.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="https://github.com/dextro67/quarkus-tutorial/edit/master/documentation/modules/ROOT/pages/basics.adoc">Edit this Page</a></div>
   </div>
   <div class="content">
 <article class="doc">
@@ -141,13 +137,13 @@
 <div class="sectionbody">
 <div class="listingblock console-input">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn "io.quarkus:quarkus-maven-plugin:1.4.2.Final:create" \
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">mvn "io.quarkus:quarkus-maven-plugin:1.10.2.Final:create" \
   -DprojectGroupId="com.redhat.developers" \
-  -DprojectArtifactId="fruits-app" \
+  -DprojectArtifactId="tutorial-app" \
   -DprojectVersion="1.0-SNAPSHOT" \
   -DclassName="HelloResource" \
   -Dpath="hello"
-cd fruits-app</code></pre>
+cd tutorial-app</code></pre>
 </div>
 </div>
 <div class="admonitionblock important">
@@ -157,7 +153,7 @@ cd fruits-app</code></pre>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-All the remaining parts of this tutorial assume that you&#8217;ll be working inside the project folder that was just created. In this case, <code>fruits-app</code>.
+All the remaining parts of this tutorial assume that you&#8217;ll be working inside the project folder that was just created. In this case, <code>tutorial-app</code>.
 </td>
 </tr>
 </table>
@@ -193,7 +189,7 @@ All the remaining parts of this tutorial assume that you&#8217;ll be working ins
 </div>
 <div id="basics-build-run-jvm-app" class="listingblock console-input">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">java -jar target/fruits-app-1.0-SNAPSHOT-runner.jar</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">java -jar target/tutorial-app-1.0-SNAPSHOT-runner.jar</code></pre>
 </div>
 </div>
 </div>
@@ -220,7 +216,7 @@ Native compilation will take few minutes to complete.
 </div>
 <div id="basics-build-run-native-app" class="listingblock console-input">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./target/fruits-app-1.0-SNAPSHOT-runner</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./target/tutorial-app-1.0-SNAPSHOT-runner</code></pre>
 </div>
 </div>
 </div>
@@ -247,8 +243,8 @@ Native compilation will take few minutes to complete.
 </div>
 <div id="basics-build-run-native-docker-app" class="listingblock console-input">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">docker build -f src/main/docker/Dockerfile.native -t example/fruits-app:1.0-SNAPSHOT .
-docker run -it --rm -p 8080:8080 example/fruits-app:1.0-SNAPSHOT</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">docker build -f src/main/docker/Dockerfile.native -t example/tutorial-app:1.0-SNAPSHOT .
+docker run -it --rm -p 8080:8080 example/tutorial-app:1.0-SNAPSHOT</code></pre>
 </div>
 </div>
 </div>
@@ -263,7 +259,7 @@ docker run -it --rm -p 8080:8080 example/fruits-app:1.0-SNAPSHOT</code></pre>
  --/ __ \/ / / / _ | / _ \/ //_/ / / / __/
  -/ /_/ / /_/ / __ |/ , _/ ,&lt; / /_/ /\ \
 --\___\_\____/_/ |_/_/|_/_/|_|\____/___/
-2020-05-10 22:37:10,161 INFO  [io.quarkus] (main) fruits-app 1.0-SNAPSHOT (powered by Quarkus 1.4.2.Final) started in 0.016s. Listening on: http://0.0.0.0:8080
+2020-05-10 22:37:10,161 INFO  [io.quarkus] (main) tutorial-app 1.0-SNAPSHOT (powered by Quarkus 1.10.2.Final) started in 0.016s. Listening on: http://0.0.0.0:8080
 2020-05-10 22:37:10,162 INFO  [io.quarkus] (main) Profile prod activated.
 2020-05-10 22:37:10,162 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy]</code></pre>
 </div>
@@ -297,7 +293,7 @@ docker run -it --rm -p 8080:8080 example/fruits-app:1.0-SNAPSHOT</code></pre>
 </div>
 <div class="listingblock console-output">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">^C2020-05-10 23:11:03,419 INFO  [io.quarkus] (main) fruits-app stopped in 0.007s</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">^C2020-05-10 23:11:03,419 INFO  [io.quarkus] (main) tutorial-app stopped in 0.007s</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -323,32 +319,6 @@ docker run -it --rm -p 8080:8080 example/fruits-app:1.0-SNAPSHOT</code></pre>
 <div class="listingblock console-input">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">./mvnw clean test</code></pre>
-</div>
-</div>
-<div class="listingblock console-output">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">[INFO] --- maven-surefire-plugin:2.22.1:test (default-test) @ fruits-app ---
-[INFO]
-[INFO] -------------------------------------------------------
-[INFO]  T E S T S
-[INFO] -------------------------------------------------------
-[INFO] Running com.redhat.developers.FruitResourceTest
-2020-05-10 19:12:12,533 INFO  [io.quarkus] (main) Quarkus 1.4.2.Final started in 1.069s. Listening on: http://0.0.0.0:8081
-2020-05-10 19:12:12,535 INFO  [io.quarkus] (main) Profile test activated.
-2020-05-10 19:12:12,535 INFO  [io.quarkus] (main) Installed features: [cdi, resteasy]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.384 s - in com.redhat.developers.FruitResourceTest
-2020-05-10 19:12:13,714 INFO  [io.quarkus] (main) Quarkus stopped in 0.057s
-[INFO]
-[INFO] Results:
-[INFO]
-[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-[INFO]
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  8.098 s
-[INFO] Finished at: 2020-05-10T19:12:14-04:00
-[INFO] ------------------------------------------------------------------------</code></pre>
 </div>
 </div>
 </div>
@@ -403,6 +373,10 @@ If you use <code>tutorial-tools</code>, your host <code>quarkus-tutorial/work</c
 </div>
 </div>
 </div>
+<nav class="pagination">
+  <span class="prev"><a href="setup.html">Setup</a></span>
+  <span class="next"><a href="configuration.html">Configuration</a></span>
+</nav>
 </article>
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
